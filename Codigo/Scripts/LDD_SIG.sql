@@ -148,6 +148,65 @@ CREATE TABLE IF NOT EXISTS `tbl_bitacoraDeEventos` (
 )ENGINE = InnoDB DEFAULT CHARACTER SET = utf8;
 
 
+-- vistas Seguridad------------------------------------------------------------------------
+CREATE 
+VIEW `colchoneria`.`vista_aplicacion_perfil` AS 
+    SELECT 
+        `b`.`fk_id_perfil` AS `ID`,
+        `a`.`nombre_perfil` AS `Perfil`,
+        `b`.`fk_id_aplicacion` AS `Aplicacion`,
+        `b`.`guardar_permiso` AS `Insertar`,
+        `b`.`modificar_permiso` AS `Modificar`,
+        `b`.`eliminar_permiso` AS `Eliminar`,
+        `b`.`buscar_permiso` AS `Buscar`,
+        `b`.`imprimir_permiso` AS `Reporte`
+    FROM
+        (`colchoneria`.`tbl_permisosaplicacionperfil` `b`
+        JOIN `colchoneria`.`tbl_perfiles` `a` ON ((`a`.`pk_id_perfil` = `b`.`fk_id_perfil`)));
+        
+CREATE 
+VIEW `colchoneria`.`vista_aplicacionusuario` AS
+    SELECT 
+        `b`.`fk_id_aplicacion` AS `Aplicacion`,
+        `b`.`fk_id_usuario` AS `ID`,
+        `a`.`nombre_usuario` AS `Usuario`,
+        `b`.`guardar_permiso` AS `Insertar`,
+        `b`.`modificar_permiso` AS `Editar`,
+        `b`.`eliminar_permiso` AS `Eliminar`,
+        `b`.`buscar_permiso` AS `Buscar`,
+        `b`.`imprimir_permiso` AS `Reporte`
+    FROM
+        (`colchoneria`.`tbl_permisosaplicacionesusuario` `b`
+        JOIN `colchoneria`.`tbl_usuarios` `a` ON ((`a`.`pk_id_usuario` = `b`.`fk_id_usuario`)));
+        
+CREATE 
+VIEW `colchoneria`.`vista_modulo_aplicacion` AS
+    SELECT 
+        `b`.`fk_id_modulos` AS `ID`,
+        `a`.`nombre_modulo` AS `Modulo`,
+        `b`.`fk_id_aplicacion` AS `Aplicacion`,
+        `c`.`nombre_aplicacion` AS `Nombre`,
+        `c`.`descripcion_aplicacion` AS `Descripcion`
+    FROM
+        ((`colchoneria`.`tbl_asignacionmoduloaplicacion` `b`
+        JOIN `colchoneria`.`tbl_modulos` `a` ON ((`a`.`pk_id_modulos` = `b`.`fk_id_modulos`)))
+        JOIN `colchoneria`.`tbl_aplicaciones` `c` ON ((`c`.`pk_id_aplicacion` = `b`.`fk_id_aplicacion`)));
+        
+CREATE 
+VIEW `colchoneria`.`vista_perfil_usuario` AS
+    SELECT 
+        `b`.`fk_id_usuario` AS `ID`,
+        `a`.`nombre_usuario` AS `Usuario`,
+        `a`.`username_usuario` AS `nickName`,
+        `b`.`fk_id_perfil` AS `perfil`,
+        `c`.`nombre_perfil` AS `Nombre`
+    FROM
+        ((`colchoneria`.`tbl_asignacionesperfilsusuario` `b`
+        JOIN `colchoneria`.`tbl_usuarios` `a` ON ((`a`.`pk_id_usuario` = `b`.`fk_id_usuario`)))
+        JOIN `colchoneria`.`tbl_perfiles` `c` ON ((`c`.`pk_id_perfil` = `b`.`fk_id_perfil`)));
+        
+        
+
 /*------------------Almacen/Inventario-------------*/
 DROP TABLE IF EXISTS tbl_almacen;
 CREATE TABLE tbl_almacen
@@ -580,7 +639,8 @@ estado_concepto_cxc tinyint default 0 not null
 CREATE TABLE if not exists `tbl_CuentaPorCobrar`(
   pk_comprobante_cxc INT not null primary key,
   fk_id_factura INT not null,
-  fk_id_almacen INT not null,
+  fk_id_almacen_venta INT not null,
+  fk_id_almacen_pago INT not null,
   fk_id_cliente INT not null,
   fk_id_tipoPago INT not null,
   fk_id_moneda INT not null,
@@ -591,9 +651,10 @@ CREATE TABLE if not exists `tbl_CuentaPorCobrar`(
   monto_cobro_cxc float not null default 0,
   monto_pago_cxc float not null default 0,
   estado_cxc tinyint default 0,
-  key(fk_id_factura, fk_id_almacen, fk_id_cliente),
+  key(fk_id_almacen_pago, fk_id_cliente),
   FOREIGN KEY (fk_id_factura) REFERENCES tbl_venta(Pk_idVenta),
-  FOREIGN KEY (fk_id_almacen) REFERENCES tbl_almacen(codigo_almacen),
+  FOREIGN KEY (fk_id_almacen_venta) REFERENCES tbl_almacen(codigo_almacen),
+  FOREIGN KEY (fk_id_almacen_pago) REFERENCES tbl_almacen(codigo_almacen),
   FOREIGN KEY (fk_id_cliente) REFERENCES tbl_clientes(Pk_idClientes),
   FOREIGN KEY (fk_id_tipoPago) REFERENCES tbl_TipoPago(pk_id_tipopago),
   FOREIGN KEY (fk_id_moneda) REFERENCES tbl_Moneda(pk_id_moneda),
